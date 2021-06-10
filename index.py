@@ -1,28 +1,33 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_mongoengine import MongoEngine, Document
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField
+from wtforms import StringField, PasswordField, BooleanField
 from wtforms.validators import Email, Length, InputRequired
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 app = Flask(__name__)
 
-app.config['MONGODB_SETTINGS'] = {
-    'db': '<---YOUR_DB_NAME--->',
-    'host': 'mongodb://<---YOUR_DB_FULL URI--->'
-}
+DB_URI = "mongodb+srv://mongouser:My6Gmkc3Zno7SVQ7@cluster0.kfbtu.mongodb.net/Personal?retryWrites=true&w=majority"
+
+app.config["MONGODB_HOST"] = DB_URI
 
 db = MongoEngine(app)
-app.config['SECRET_KEY'] = '<---YOUR_SECRET_FORM_KEY--->'
+app.config['SECRET_KEY'] = '8f42a73054b1749f8f58848be5e6502c'
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 class User(UserMixin, db.Document):
-    meta = {'collection': '<---YOUR_COLLECTION_NAME--->'}
-    email = db.StringField(max_length=30)
-    password = db.StringField()
+        meta = {'collection': 'User'}
+        name = db.StringField()
+        email = db.StringField( max_length=30)
+        password = db.StringField()
+        is_active=db.BooleanField()
+        authenticated=db.BooleanField()
+        @property
+        def is_authenticated(self):
+            return self.authenticated
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -40,7 +45,7 @@ def register():
             existing_user = User.objects(email=form.email.data).first()
             if existing_user is None:
                 hashpass = generate_password_hash(form.password.data, method='sha256')
-                hey = User(form.email.data,hashpass).save()
+                hey = User(email=form.email.data,password=hashpass).save()
                 login_user(hey)
                 return redirect(url_for('dashboard'))
     return render_template('register.html', form=form)
