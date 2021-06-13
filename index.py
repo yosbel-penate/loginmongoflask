@@ -61,6 +61,8 @@ def login():
             if check_user:
                 if check_password_hash(check_user['password'], form.password.data):
                     login_user(check_user)
+                    check_user.authenticated=True
+                    check_user.save()
                     return redirect(url_for('dashboard'))
     return render_template('login.html', form=form)
 
@@ -73,4 +75,6 @@ def dashboard():
 @login_required
 def logout():
     logout_user()
+    check_user.authenticated=False
+    check_user.save()
     return redirect(url_for('login'))
