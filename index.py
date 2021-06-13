@@ -36,16 +36,17 @@ def load_user(user_id):
 class RegForm(FlaskForm):
     email = StringField('email',  validators=[InputRequired(), Email(message='Invalid email'), Length(max=30)])
     password = PasswordField('password', validators=[InputRequired(), Length(min=8, max=20)])
+    repeadPassword = PasswordField('password', validators=[InputRequired(), Length(min=8, max=20)])
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegForm()
     if request.method == 'POST':
-        if form.validate():
+        if form.validate() and form.password.data==form.repeadPassword.data:
             existing_user = User.objects(email=form.email.data).first()
             if existing_user is None:
                 hashpass = generate_password_hash(form.password.data, method='sha256')
-                hey = User(email=form.email.data,password=hashpass).save()
+                hey = User(email=form.email.data,password=hashpass, authenticated=True, is_active=True).save()
                 login_user(hey)
                 return redirect(url_for('dashboard'))
     return render_template('register.html', form=form)
