@@ -75,6 +75,4 @@ def dashboard():
 @login_required
 def logout():
     logout_user()
-    check_user.authenticated=False
-    check_user.save()
     return redirect(url_for('login'))
